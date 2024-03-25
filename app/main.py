@@ -16,7 +16,7 @@ app = FastAPI(title="Serverless Runtime")
 async def root():
     return "Main routes: \
             POST -> /v1/faas/execute-sync  \
-                    /v1/faas/execute-sync \
+                    /v1/faas/execute-async \
                     /v1/daas/upload \
             GET -> /v1/faas/{faas_uuid}/status"
 

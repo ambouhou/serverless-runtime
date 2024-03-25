@@ -74,7 +74,7 @@ class CognitFuncExecCollector(object):
                 labels.append(f'param_l_{i}')
 
         # Define sync metric labels 
-        gauge = GaugeMetricFamily("func_exec_time", f'Function execution time within VM_ID: {vmid}', labels=labels)
+        gauge = GaugeMetricFamily("func_exec_time", f'Function execution time (in seconds) within VM_ID: {vmid}', labels=labels)
         if 'async_end_time' in globals() and isinstance(async_end_time, float):
             # Define variables for setting async labels
             self.exec_async_time = async_end_time - async_start_time
