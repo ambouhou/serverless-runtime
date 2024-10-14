@@ -21,6 +21,8 @@ faas_router = APIRouter()
 cognit_logger = CognitLogger()
 faas_parser = FaasParser()
 
+global app_req_id
+
 def deserialize_py_fc(input_fc: ExecSyncParams | ExecAsyncParams) -> Tuple[Any, Any]:
     decoded_fc = faas_parser.deserialize(input_fc.fc)
     decoded_params = [faas_parser.deserialize(p) for p in input_fc.params]
@@ -28,7 +30,7 @@ def deserialize_py_fc(input_fc: ExecSyncParams | ExecAsyncParams) -> Tuple[Any, 
 
 def get_vmid():
     with open("/var/run/one-context/one_env", "r") as file_one:
-    #with open("/tmp/one_env", "r") as file_one:
+    # with open("/tmp/one_env", "r") as file_one:
         patt = "VMID="
         for l in file_one:
             if re.search(patt, l):
@@ -68,7 +70,7 @@ class CognitFuncExecCollector(object):
             self.s_end_t = time.ctime(sync_end_time)
         else:
             self.s_end_t = "0"
-        labels = ['vm_id', 'func_type', 'func_hash', 'start_time', 'end_time']
+        labels = ['vm_id', 'func_type', 'func_hash', 'start_time', 'end_time', 'requirement_id']
         if 'params_prom_label' in globals():
             for i in range(len(params_prom_label)):
                 labels.append(f'param_l_{i}')
@@ -81,7 +83,7 @@ class CognitFuncExecCollector(object):
             self.a_st_t = time.ctime(async_start_time)
             self.a_end_t = time.ctime(async_end_time)
             # Add async metric
-            metric_label_values = [vmid, "async", self.fc_hash, self.a_st_t, self.a_end_t]
+            metric_label_values = [vmid, "async", self.fc_hash, self.a_st_t, self.a_end_t, app_req_id]
             if 'params_prom_label' in globals():
                 for i in range(len(params_prom_label)):
                     metric_label_values.append(str(params_prom_label[i]))
@@ -93,7 +95,7 @@ class CognitFuncExecCollector(object):
             # Define variables for setting sync labels    
             self.exec_time = sync_end_time - sync_start_time
             # Add sync metric
-            metric_label_values = [vmid, "sync", self.fc_hash, self.s_st_t, self.s_end_t]
+            metric_label_values = [vmid, "sync", self.fc_hash, self.s_st_t, self.s_end_t, app_req_id]
             if 'params_prom_label' in globals():
                 for i in range(len(params_prom_label)):
                     metric_label_values.append(str(params_prom_label[i]))
@@ -111,6 +113,8 @@ async def execute_sync(offloaded_func: ExecSyncParams):
     # Validate and deserialize the request based on the language
     if offloaded_func.lang == "PY":
         try:
+            global app_req_id
+            app_req_id = str(offloaded_func.app_req_id)
             fc, params = deserialize_py_fc(offloaded_func)
         except Exception as e:
             raise HTTPException(status_code=400, detail="Error deserializing function")
