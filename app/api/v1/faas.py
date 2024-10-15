@@ -29,8 +29,8 @@ def deserialize_py_fc(input_fc: ExecSyncParams | ExecAsyncParams) -> Tuple[Any, 
     return decoded_fc, decoded_params
 
 def get_vmid():
-    with open("/var/run/one-context/one_env", "r") as file_one:
-    # with open("/tmp/one_env", "r") as file_one:
+    #~with open("/var/run/one-context/one_env", "r") as file_one:
+    with open("/tmp/one_env", "r") as file_one:
         patt = "VMID="
         for l in file_one:
             if re.search(patt, l):
@@ -162,7 +162,7 @@ async def execute_sync(offloaded_func: ExecSyncParams):
     if offloaded_func.lang == "C":
         b64_res = faas_parser.any_to_b64(executor.get_result())
         
-    result = ExecResponse(res=b64_res, ret_code=ExecReturnCode.SUCCESS)
+    result = ExecResponse(res=b64_res, ret_code=executor.get_ret_code(), err= executor.get_err())
 
     cognit_logger.debug(f"Result: {result}")
 
