@@ -29,8 +29,8 @@ def deserialize_py_fc(input_fc: ExecSyncParams | ExecAsyncParams) -> Tuple[Any, 
     return decoded_fc, decoded_params
 
 def get_vmid():
-    #~with open("/var/run/one-context/one_env", "r") as file_one:
-    with open("/tmp/one_env", "r") as file_one:
+    with open("/var/run/one-context/one_env", "r") as file_one:
+    #with open("/tmp/one_env", "r") as file_one:
         patt = "VMID="
         for l in file_one:
             if re.search(patt, l):
@@ -117,7 +117,7 @@ async def execute_sync(offloaded_func: ExecSyncParams):
             app_req_id = str(offloaded_func.app_req_id)
             fc, params = deserialize_py_fc(offloaded_func)
         except Exception as e:
-            raise HTTPException(status_code=400, detail="Error deserializing function")
+            raise HTTPException(status_code=400, detail="Error deserializing sync PY function. More details; {0}".format(e))
         if not callable(fc):
             raise HTTPException(status_code=400, detail=" Not callable function")
 
@@ -127,7 +127,7 @@ async def execute_sync(offloaded_func: ExecSyncParams):
         try:
             fc, params = deserialize_c_fc(offloaded_func)
         except Exception as e:
-            raise HTTPException(status_code=400, detail="Error deserializing function")
+            raise HTTPException(status_code=400, detail="Error deserializing sync C function. More details; {0}".format(e))
         executor = CExec(fc=fc, params=params)
         pass
     else:
@@ -178,7 +178,7 @@ async def execute_async(offloaded_func: ExecAsyncParams, response: Response):
         try:
             fc, params = deserialize_py_fc(offloaded_func)
         except Exception as e:
-            raise HTTPException(status_code=400, detail="Error deserializing function")
+            raise HTTPException(status_code=400, detail="Error deserializing async PY function. More details; {0}".format(e))
         if not callable(fc):
             raise HTTPException(status_code=400, detail=" Not callable function")
 
@@ -188,7 +188,7 @@ async def execute_async(offloaded_func: ExecAsyncParams, response: Response):
         try:
             fc, params = deserialize_c_fc(offloaded_func)
         except Exception as e:
-            raise HTTPException(status_code=400, detail="Error deserializing function")
+            raise HTTPException(status_code=400, detail="Error deserializing async C function. More details; {0}".format(e))
         executor = CExec(fc=fc, params=params)
         pass
     else:
