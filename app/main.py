@@ -50,7 +50,7 @@ def is_prometheus_running() -> bool:
     # Step 2a: Check if the port is open on the host
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(5)
+            s.settimeout(30)
             result = s.connect_ex(("localhost", PROM_PORT))
             if result == 0:
                 cognit_logger.warning(f"Port {PROM_PORT} is open on the host, but Prometheus is not responding.")
