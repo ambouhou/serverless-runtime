@@ -294,8 +294,6 @@ def parse_params(faas_request):
             values = param.my_sfixed64.values
         elif param.WhichOneof('param') == 'my_bool':
             values = param.my_bool.values
-        elif param.WhichOneof('param') == 'my_bytes':
-            values = param.my_bytes.values
         elif param.WhichOneof('param') == 'my_string':
             values = [param.my_string]
         else:
@@ -318,8 +316,6 @@ def parse_result(result):
         response_param.my_int32.values.extend([result])  # Assuming 32-bit int, change to my_int64 for larger values
     elif isinstance(result, bool):
         response_param.my_bool.values.extend([result])
-    elif isinstance(result, bytes):
-        response_param.my_bytes.values.extend([result])
     elif isinstance(result, list):
         if all(isinstance(x, float) for x in result):
             response_param.my_double.values.extend(result)
@@ -338,6 +334,7 @@ def parse_result(result):
 @faas_router.post("/c/faas_request")
 def faas_request(data: bytes = Body(..., media_type="application/octet-stream")):
     global func_list
+    print(f"Bytes recibidos: {data.hex()}")  # Muestra los datos binarios
 
     cognit_logger.debug("Parsing FaaS request...")
     # Parse request body to FaasRequest objeto 
@@ -348,6 +345,9 @@ def faas_request(data: bytes = Body(..., media_type="application/octet-stream"))
     # Parse params
     args = parse_params(faas_request)
     
+    my_bytes = faas_request.my_bytes
+    if len(my_bytes) > 0:
+        args.insert(faas_request.bytes_pos, my_bytes)
     cognit_logger.debug("Looking for function with ID: " + str(faas_request.fc_id))
     # Find corresponding function in global list
     target_func = next((func for func in func_list if func.fc_id == faas_request.fc_id), None)
